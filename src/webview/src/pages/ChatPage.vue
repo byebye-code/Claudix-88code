@@ -75,6 +75,8 @@
             @mode-select="handleModeSelect"
             @model-select="handleModelSelect"
           />
+          <!-- 88code 订阅信息栏 -->
+          <SubscriptionBar :api-key="apiKey88Code" />
         </div>
       <!-- </div> -->
     </div>
@@ -96,12 +98,18 @@
   import ClaudeWordmark from '../components/ClaudeWordmark.vue';
   import RandomTip from '../components/RandomTip.vue';
   import MessageRenderer from '../components/Messages/MessageRenderer.vue';
+  import SubscriptionBar from '../components/SubscriptionBar.vue';
   import { useKeybinding } from '../utils/useKeybinding';
   import { useSignal } from '@gn8/alien-signals-vue';
   import type { PermissionMode } from '@anthropic-ai/claude-agent-sdk';
+  import { get88CodeApiKey } from '../utils/apiKeyHelper';
+  import { webviewLogger } from '../utils/webviewLogger';
 
   const runtime = inject(RuntimeKey);
   if (!runtime) throw new Error('[ChatPage] runtime not provided');
+
+  // 88code API Key 状态
+  const apiKey88Code = ref<string | null>(null);
 
   const toolContext = computed<ToolContext>(() => ({
     fileOpener: {
@@ -220,6 +228,25 @@
     prevCount = messages.value.length;
     await nextTick();
     scrollToBottom();
+
+    // 获取 88code API Key - 等待 transport 初始化
+    webviewLogger.info('[ChatPage] Mounted, getting 88code API Key...');
+    webviewLogger.info('[ChatPage] runtime available:', !!runtime);
+    webviewLogger.info('[ChatPage] Waiting for transport initialization...');
+
+    try {
+      // 等待 transport 初始化完成
+      const transport = await runtime.connectionManager.get();
+      webviewLogger.info('[ChatPage] Transport initialized successfully');
+      
+      const key = await get88CodeApiKey(transport);
+      apiKey88Code.value = key;
+      webviewLogger.info('[ChatPage] API Key retrieved:', key ? `${key.substring(0, 10)}...` : 'null');
+      webviewLogger.info('[ChatPage] apiKey88Code.value set to:', apiKey88Code.value ? `${apiKey88Code.value.substring(0, 10)}...` : 'null');
+    } catch (e) {
+      webviewLogger.error('[ChatPage] Failed to get 88code API key:', e);
+      webviewLogger.error('[ChatPage] Error stack:', (e as Error)?.stack);
+    }
   });
 
   onUnmounted(() => {
@@ -258,7 +285,7 @@
       // 发送成功后清空附件
       attachments.value = [];
     } catch (e) {
-      console.error('[ChatPage] send failed', e);
+      webviewLogger.error('[ChatPage] send failed', e);
     }
   }
 
@@ -338,9 +365,9 @@
       // 添加到附件列表
       attachments.value = [...attachments.value, ...conversions];
 
-      console.log('[ChatPage] Added attachments:', conversions.map(a => a.fileName));
+      webviewLogger.info('[ChatPage] Added attachments:', conversions.map(a => a.fileName));
     } catch (e) {
-      console.error('[ChatPage] Failed to convert files:', e);
+      webviewLogger.error('[ChatPage] Failed to convert files:', e);
     }
   }
 
@@ -357,7 +384,7 @@
         request.reject('User denied', true);
       }
     } catch (e) {
-      console.error('[ChatPage] permission resolve failed', e);
+      webviewLogger.error('[ChatPage] permission resolve failed', e);
     }
   }
 </script>

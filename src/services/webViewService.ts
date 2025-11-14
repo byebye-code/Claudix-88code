@@ -73,9 +73,30 @@ export class WebViewService implements IWebViewService {
 		// 连接消息处理器
 		webviewView.webview.onDidReceiveMessage(
 			message => {
-				this.logService.info(`[WebView → Extension] 收到消息: ${message.type}`);
-				if (this.messageHandler) {
-					this.messageHandler(message);
+				// 处理 WebView 日志消息
+				if (message.type === 'webview_log') {
+					const level = message.level || 'info';
+					const logMessage = `[WebView] ${message.message}`;
+					const args = message.args || [];
+					
+					switch (level) {
+						case 'error':
+							this.logService.error(logMessage, ...args);
+							break;
+						case 'warn':
+							this.logService.warn(logMessage, ...args);
+							break;
+						case 'debug':
+							this.logService.debug(logMessage, ...args);
+							break;
+						default:
+							this.logService.info(logMessage, ...args);
+					}
+				} else {
+					this.logService.info(`[WebView → Extension] 收到消息: ${message.type}`);
+					if (this.messageHandler) {
+						this.messageHandler(message);
+					}
 				}
 			},
 			undefined,

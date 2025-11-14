@@ -19,6 +19,8 @@ import type {
     GetMcpServersResponse,
     GetAssetUrisRequest,
     GetAssetUrisResponse,
+    Get88CodeApiKeyRequest,
+    Get88CodeApiKeyResponse,
     OpenFileRequest,
     OpenFileResponse,
     GetCurrentSelectionResponse,
@@ -161,6 +163,147 @@ export async function handleGetAssetUris(
         type: "asset_uris_response",
         assetUris: getAssetUris(context)
     };
+}
+
+/**
+ * 获取 88code API Key
+ * 按照 88code-status-vscode-extension 的方式获取：
+ * 1. 优先从配置文件读取 (~/.codex/auth.json 和 ~/.claude/settings.json)
+ * 2. 再从环境变量读取 (key88, ANTHROPIC_AUTH_TOKEN, OPENAI_API_KEY)
+ * 3. 验证 API key 必须以 "88_" 开头
+ */
+export async function handleGet88CodeApiKey(
+    _request: Get88CodeApiKeyRequest,
+    context: HandlerContext
+): Promise<Get88CodeApiKeyResponse> {
+    const { logService } = context;
+
+    try {
+        // 1. 首先尝试从配置文件读取
+        let apiKey = await getKeyFromConfigFiles(logService);
+        if (apiKey) {
+            logService.info('[handleGet88CodeApiKey] ✓ API Key found in config files');
+            logService.info(`[handleGet88CodeApiKey] API Key value: ${apiKey.substring(0, 20)}... (length: ${apiKey.length})`);
+            logService.info(`[handleGet88CodeApiKey] Key format: ${apiKey.startsWith('88_') ? '88_*' : apiKey.startsWith('cr_') ? 'cr_*' : 'unknown'}`);
+            return {
+                type: "get_88code_api_key_response",
+                apiKey
+            };
+        }
+
+        // 2. 再尝试从环境变量读取
+        apiKey = getKeyFromEnv();
+        if (apiKey) {
+            logService.info('[handleGet88CodeApiKey] ✓ API Key found in environment variables');
+            logService.info(`[handleGet88CodeApiKey] API Key value: ${apiKey.substring(0, 20)}... (length: ${apiKey.length})`);
+            logService.info(`[handleGet88CodeApiKey] Key format: ${apiKey.startsWith('88_') ? '88_*' : apiKey.startsWith('cr_') ? 'cr_*' : 'unknown'}`);
+            return {
+                type: "get_88code_api_key_response",
+                apiKey
+            };
+        }
+
+        logService.warn('[handleGet88CodeApiKey] ✗ No valid API Key found');
+        logService.warn('[handleGet88CodeApiKey] Please configure API Key (must start with "88_" or "cr_") in:');
+        logService.warn('[handleGet88CodeApiKey]   - ~/.codex/auth.json (OPENAI_API_KEY)');
+        logService.warn('[handleGet88CodeApiKey]   - ~/.claude/settings.json (env.ANTHROPIC_AUTH_TOKEN)');
+        logService.warn('[handleGet88CodeApiKey]   - Environment variable: key88, ANTHROPIC_AUTH_TOKEN, or OPENAI_API_KEY');
+        return {
+            type: "get_88code_api_key_response",
+            apiKey: null
+        };
+    } catch (error) {
+        logService.error(`[handleGet88CodeApiKey] Error: ${error}`);
+        return {
+            type: "get_88code_api_key_response",
+            apiKey: null
+        };
+    }
+}
+
+/**
+ * 验证是否为有效的 88code API Key
+ * 支持两种格式：88_ 和 cr_ 开头
+ */
+function isValidApiKey(key: any): boolean {
+    return typeof key === 'string' && (key.startsWith('88_') || key.startsWith('cr_'));
+}
+
+/**
+ * 从配置文件读取 API Key
+ * 读取 ~/.codex/auth.json 和 ~/.claude/settings.json
+ */
+async function getKeyFromConfigFiles(logService: any): Promise<string | null> {
+    const homeDir = os.homedir();
+
+    // 尝试从 Codex 配置文件读取
+    try {
+        const codexConfigPath = path.join(homeDir, '.codex', 'auth.json');
+        logService.debug(`[handleGet88CodeApiKey] Checking: ${codexConfigPath}`);
+        const codexConfigContent = await fs.promises.readFile(codexConfigPath, 'utf8');
+        const codexConfig = JSON.parse(codexConfigContent);
+        const key = codexConfig['OPENAI_API_KEY'];
+        
+        logService.debug(`[handleGet88CodeApiKey] OPENAI_API_KEY found: ${!!key}`);
+        if (key) {
+            logService.debug(`[handleGet88CodeApiKey] OPENAI_API_KEY value: ${String(key).substring(0, 20)}...`);
+            logService.debug(`[handleGet88CodeApiKey] Is valid key (88_* or cr_*): ${isValidApiKey(key)}`);
+        }
+        
+        if (isValidApiKey(key)) {
+            logService.info(`[handleGet88CodeApiKey] ✓ Found valid API key in ~/.codex/auth.json`);
+            return key;
+        }
+    } catch (e) {
+        logService.debug(`[handleGet88CodeApiKey] Could not read ~/.codex/auth.json: ${e instanceof Error ? e.message : String(e)}`);
+    }
+
+    // 尝试从 Claude 配置文件读取
+    try {
+        const claudeConfigPath = path.join(homeDir, '.claude', 'settings.json');
+        logService.debug(`[handleGet88CodeApiKey] Checking: ${claudeConfigPath}`);
+        const claudeConfigContent = await fs.promises.readFile(claudeConfigPath, 'utf8');
+        const claudeSettings = JSON.parse(claudeConfigContent);
+        const key = claudeSettings['env'] ? claudeSettings['env']['ANTHROPIC_AUTH_TOKEN'] : undefined;
+        
+        logService.debug(`[handleGet88CodeApiKey] ANTHROPIC_AUTH_TOKEN found: ${!!key}`);
+        if (key) {
+            logService.debug(`[handleGet88CodeApiKey] ANTHROPIC_AUTH_TOKEN value: ${String(key).substring(0, 20)}...`);
+            logService.debug(`[handleGet88CodeApiKey] Is valid key (88_* or cr_*): ${isValidApiKey(key)}`);
+        }
+        
+        if (isValidApiKey(key)) {
+            logService.info(`[handleGet88CodeApiKey] ✓ Found valid API key in ~/.claude/settings.json`);
+            return key;
+        }
+    } catch (e) {
+        logService.debug(`[handleGet88CodeApiKey] Could not read ~/.claude/settings.json: ${e instanceof Error ? e.message : String(e)}`);
+    }
+
+    return null;
+}
+
+/**
+ * 从环境变量读取 API Key
+ * 优先顺序: key88 > ANTHROPIC_AUTH_TOKEN > OPENAI_API_KEY
+ */
+function getKeyFromEnv(): string | null {
+    const key88Val = process.env.key88;
+    const anthropicVal = process.env.ANTHROPIC_AUTH_TOKEN;
+    const openaiVal = process.env.OPENAI_API_KEY;
+    
+    // 显示环境变量状态
+    console.log('[handleGet88CodeApiKey] Environment variables:');
+    console.log(`  - key88: ${key88Val ? `${String(key88Val).substring(0, 20)}...` : 'not set'}`);
+    console.log(`  - ANTHROPIC_AUTH_TOKEN: ${anthropicVal ? `${String(anthropicVal).substring(0, 20)}...` : 'not set'}`);
+    console.log(`  - OPENAI_API_KEY: ${openaiVal ? `${String(openaiVal).substring(0, 20)}...` : 'not set'}`);
+    
+    const key = key88Val || anthropicVal || openaiVal;
+    if (isValidApiKey(key)) {
+        console.log(`[handleGet88CodeApiKey] ✓ Found valid API key in environment variables`);
+        return key || null;
+    }
+    return null;
 }
 
 /**

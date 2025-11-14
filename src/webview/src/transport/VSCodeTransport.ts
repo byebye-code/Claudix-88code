@@ -1,6 +1,7 @@
 import { BaseTransport } from './BaseTransport';
 import { EventEmitter } from '../utils/events';
 import type { FromExtensionWrapper, WebViewToExtensionMessage } from '../../../shared/messages';
+import { getVsCodeApi } from '../utils/vscodeApi';
 
 interface VsCodeApi {
     postMessage(message: any): void;
@@ -34,7 +35,12 @@ export class VSCodeTransport extends BaseTransport {
     constructor(atMentionEvents: EventEmitter<string>, selectionChangedEvents: EventEmitter<any>) {
         super(atMentionEvents, selectionChangedEvents);
 
-        this.api = (window as any).acquireVsCodeApi();
+        // 使用共享的 VSCode API 实例，避免重复调用 acquireVsCodeApi()
+        const vscodeApi = getVsCodeApi();
+        if (!vscodeApi) {
+            throw new Error('[VSCodeTransport] Failed to get VSCode API');
+        }
+        this.api = vscodeApi;
 
         window.addEventListener('message', this.handleMessage);
 

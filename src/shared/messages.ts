@@ -60,6 +60,16 @@ export interface InterruptClaudeMessage extends BaseMessage {
 }
 
 /**
+ * WebView 日志消息（用于转发 console.log 到扩展端）
+ */
+export interface WebViewLogMessage extends BaseMessage {
+    type: "webview_log";
+    level: "log" | "info" | "warn" | "error" | "debug";
+    message: string;
+    args?: any[];
+}
+
+/**
  * 关闭会话（双向）
  */
 export interface CloseChannelMessage extends BaseMessage {
@@ -255,6 +265,18 @@ export interface GetAssetUrisRequest {
 export interface GetAssetUrisResponse {
     type: "asset_uris_response";
     assetUris: any;
+}
+
+/**
+ * 获取 88code API Key
+ */
+export interface Get88CodeApiKeyRequest {
+    type: "get_88code_api_key";
+}
+
+export interface Get88CodeApiKeyResponse {
+    type: "get_88code_api_key_response";
+    apiKey: string | null;
 }
 
 /**
@@ -545,7 +567,8 @@ export type WebViewToExtensionMessage =
     | CloseChannelMessage
     | RequestMessage
     | ResponseMessage
-    | CancelRequestMessage;
+    | CancelRequestMessage
+    | WebViewLogMessage;
 
 /**
  * 所有 Extension → WebView 的消息
@@ -586,6 +609,7 @@ export type WebViewRequest =
     | GetClaudeStateRequest
     | GetMcpServersRequest
     | GetAssetUrisRequest
+    | Get88CodeApiKeyRequest
     | ListSessionsRequest
     | GetSessionRequest
     | ExecRequest
@@ -615,6 +639,7 @@ export type WebViewRequestResponse =
     | GetClaudeStateResponse
     | GetMcpServersResponse
     | GetAssetUrisResponse
+    | Get88CodeApiKeyResponse
     | ListSessionsResponse
     | GetSessionResponse
     | ExecResponse

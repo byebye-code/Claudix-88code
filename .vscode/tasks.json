@@ -71,7 +71,7 @@
     {
       "label": "Compile Extension",
       "type": "npm",
-      "script": "compile",
+      "script": "build:extension",
       "group": "build",
       "problemMatcher": []
     },

@@ -34,7 +34,7 @@ export class LogService implements ILogService {
 	private outputChannel: vscode.OutputChannel;
 
 	constructor() {
-		this.outputChannel = vscode.window.createOutputChannel('VCC');
+		this.outputChannel = vscode.window.createOutputChannel('88code');
 	}
 
 	setLevel(level: LogLevel): void {
@@ -48,9 +48,8 @@ export class LogService implements ILogService {
 	}
 
 	debug(message: string, ...args: any[]): void {
-		if (this.level <= LogLevel.Debug) {
-			this.log('DEBUG', message, args);
-		}
+		// 总是输出 debug 日志（方便排查问题）
+		this.log('DEBUG', message, args);
 	}
 
 	info(message: string, ...args: any[]): void {

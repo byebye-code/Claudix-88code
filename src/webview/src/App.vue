@@ -36,6 +36,7 @@ import ChatPage from './pages/ChatPage.vue';
 import './styles/claude-theme.css';
 import { useRuntime } from './composables/useRuntime';
 import { RuntimeKey } from './composables/runtimeContext';
+import { webviewLogger } from './utils/webviewLogger';
 // import IconTestPage from './pages/IconTestPage.vue';
 
 const currentPage = ref<'sessions' | 'chat'>('chat');
@@ -44,7 +45,7 @@ const pageAnimation = ref({ opacity: 1, x: 0 });
 // 初始化运行时（通信与状态逻辑）
 const runtime = useRuntime();
 onMounted(() => {
-  console.log('[App] runtime initialized', runtime);
+  webviewLogger.info('[App] runtime initialized', runtime);
 });
 provide(RuntimeKey, runtime);
 
@@ -69,7 +70,7 @@ function switchToPage(page: 'sessions' | 'chat') {
 
 function handleSwitchToChat(sessionId?: string) {
   if (sessionId) {
-    console.log('Switching to chat with session:', sessionId);
+    webviewLogger.info('Switching to chat with session:', sessionId);
   }
   switchToPage('chat');
 }

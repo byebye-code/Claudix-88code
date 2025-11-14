@@ -57,6 +57,7 @@ import {
     handleGetClaudeState,
     handleGetMcpServers,
     handleGetAssetUris,
+    handleGet88CodeApiKey,
     handleOpenFile,
     handleGetCurrentSelection,
     handleShowNotification,
@@ -633,6 +634,9 @@ export class ClaudeAgentService implements IClaudeAgentService {
 
             case "get_asset_uris":
                 return handleGetAssetUris(request, this.handlerContext);
+
+            case "get_88code_api_key":
+                return handleGet88CodeApiKey(request, this.handlerContext);
 
             // 编辑器操作
             case "open_file":
