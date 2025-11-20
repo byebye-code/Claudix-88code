@@ -40,3 +40,10 @@ RIGHT-ALIGNED-BALANCE.md
 SUBSCRIPTION-CHANGE-ONLY-DISPLAY.md
 TEXT-ONLY-BADGE.md
 SPINNER-ANIMATION-FIX.md
+.spec-workflow/templates/design-template.md
+.spec-workflow/templates/product-template.md
+.spec-workflow/templates/requirements-template.md
+.spec-workflow/templates/structure-template.md
+.spec-workflow/templates/tasks-template.md
+.spec-workflow/templates/tech-template.md
+.spec-workflow/user-templates/README.md

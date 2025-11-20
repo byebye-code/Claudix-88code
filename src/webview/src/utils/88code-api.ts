@@ -95,17 +95,33 @@ export async function fetchSubscriptions(apiKey: string): Promise<Subscription[]
   webviewLogger.info('[88code-api] Parsing response JSON...');
   const body = (await res.json()) as unknown;
   webviewLogger.info('[88code-api] Response body type:', typeof body);
-  webviewLogger.info('[88code-api] Is array:', Array.isArray(body));
 
-  if (!Array.isArray(body)) {
-    webviewLogger.error('[88code-api] Invalid response body - not an array:', body);
+  // API 返回格式: { code: 0, msg: "操作成功", ok: true, data: [...] }
+  if (typeof body !== 'object' || body === null) {
+    webviewLogger.error('[88code-api] Invalid response body - not an object:', body);
     throw new Error('Invalid response body');
   }
 
-  webviewLogger.info('[88code-api] Received', body.length, 'subscriptions');
-  webviewLogger.info('[88code-api] Subscriptions:', JSON.stringify(body, null, 2));
+  const responseObj = body as { code?: number; ok?: boolean; msg?: string; data?: unknown };
 
-  return body as Subscription[];
+  // 检查响应状态
+  if (responseObj.ok !== true) {
+    const msg = responseObj.msg || 'API 返回错误';
+    webviewLogger.error('[88code-api] API error:', msg);
+    throw new Error(msg);
+  }
+
+  // 检查 data 字段
+  if (!Array.isArray(responseObj.data)) {
+    webviewLogger.error('[88code-api] Invalid response - data is not an array:', responseObj.data);
+    throw new Error('Invalid response data');
+  }
+
+  const subscriptions = responseObj.data as Subscription[];
+  webviewLogger.info('[88code-api] Received', subscriptions.length, 'subscriptions');
+  webviewLogger.info('[88code-api] Subscriptions:', JSON.stringify(subscriptions, null, 2));
+
+  return subscriptions;
 }
 
 export async function fetchActiveSubscriptions(apiKey: string): Promise<Subscription[]> {
