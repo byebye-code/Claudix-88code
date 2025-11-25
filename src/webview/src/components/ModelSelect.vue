@@ -37,6 +37,17 @@
         :index="1"
         @click="(item) => handleModelSelect(item, close)"
       />
+      <DropdownItem
+        :item="{
+          id: 'claude-opus-4-5-20251101',
+          label: 'Opus 4.5',
+          checked: selectedModel === 'claude-opus-4-5-20251101',
+          type: 'model'
+        }"
+        :is-selected="selectedModel === 'claude-opus-4-5-20251101'"
+        :index="2"
+        @click="(item) => handleModelSelect(item, close)"
+      />
     </template>
   </DropdownTrigger>
 </template>
@@ -66,6 +77,8 @@ const selectedModelLabel = computed(() => {
       return 'Sonnet 4.5'
     case 'claude-opus-4-1':
       return 'Opus 4.1'
+    case 'claude-opus-4-5-20251101':
+      return 'Opus 4.5'
     default:
       return 'Sonnet 4.5'
   }
