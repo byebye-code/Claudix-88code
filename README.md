@@ -40,6 +40,56 @@ pnpm package
 
 Install the generated `.vsix` file in VSCode through Extensions > Install from VSIX.
 
+## Development
+
+### Running in Development Mode
+
+Start the development server with hot module replacement:
+
+```bash
+pnpm dev
+```
+
+This will concurrently start:
+- Vite dev server (port 5173) for the webview
+- esbuild watcher for the extension
+
+### Debugging
+
+Open the project in VSCode and use the debugging configurations:
+
+#### Run Extension
+Full build mode without HMR. The extension will be built from scratch before launching.
+
+- Press `F5` or select "Run Extension" from the debug panel
+- Suitable for production-like testing
+
+#### Run Extension (HMR)
+Development mode with hot module replacement for the webview.
+
+- Select "Run Extension (HMR)" from the debug panel
+- Webview changes will reload automatically without restarting the extension
+- Faster iteration during development
+
+### Build Commands
+
+```bash
+# Build everything
+pnpm build
+
+# Build extension only
+pnpm build:extension
+
+# Build webview only
+pnpm build:webview
+
+# Run tests
+pnpm test
+
+# Type checking
+pnpm typecheck:all
+```
+
 ## Usage
 
 1. Open the Claude Code sidebar from the activity bar
@@ -59,3 +109,7 @@ Contributions are welcome! If you would like to contribute to this project, plea
 ## License
 
 AGPL-3.0
+
+## Star History
+
+[![Star History](https://api.star-history.com/svg?repos=Haleclipse/Claudix&type=date&legend=top-left)](https://www.star-history.com/#Haleclipse/Claudix&type=date&legend=top-left)

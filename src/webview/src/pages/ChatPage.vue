@@ -409,6 +409,8 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    overflow: hidden;
+    flex: 1;
   }
 
   .menu-btn {
@@ -440,8 +442,6 @@
     font-size: 12px;
     font-weight: 600;
     color: var(--vscode-titleBar-activeForeground);
-    /* 限制标题长度，避免溢出 */
-    max-width: 500px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

@@ -40,6 +40,56 @@ pnpm package
 
 在 VSCode 中通过"扩展">"从 VSIX 安装"来安装生成的 `.vsix` 文件。
 
+## 开发调试
+
+### 启动开发模式
+
+启动带有热模块替换的开发服务器：
+
+```bash
+pnpm dev
+```
+
+这将同时启动：
+- Vite 开发服务器（端口 5173）用于 webview
+- esbuild 监听器用于扩展
+
+### 调试扩展
+
+在 VSCode 中打开项目，使用以下调试配置：
+
+#### Run Extension（运行扩展）
+完整构建模式，不带热重载。启动前会从头构建扩展。
+
+- 按 `F5` 或从调试面板选择"Run Extension"
+- 适合类生产环境测试
+
+#### Run Extension (HMR)（热重载模式）
+开发模式，webview 支持热模块替换。
+
+- 从调试面板选择"Run Extension (HMR)"
+- webview 的更改会自动重新加载，无需重启扩展
+- 开发时迭代更快
+
+### 构建命令
+
+```bash
+# 构建所有内容
+pnpm build
+
+# 仅构建扩展
+pnpm build:extension
+
+# 仅构建 webview
+pnpm build:webview
+
+# 运行测试
+pnpm test
+
+# 类型检查
+pnpm typecheck:all
+```
+
 ## 使用方法
 
 1. 从活动栏打开 Claude Code 侧边栏
@@ -59,3 +109,7 @@ pnpm package
 ## 许可证
 
 AGPL-3.0
+
+## Star History
+
+[![Star History](https://api.star-history.com/svg?repos=Haleclipse/Claudix&type=date&legend=top-left)](https://www.star-history.com/#Haleclipse/Claudix&type=date&legend=top-left)
